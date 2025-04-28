@@ -1,0 +1,17 @@
+# version: '3.8'
+
+services:
+  nuki-app:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: nuki-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    volumes:
+      - ./server:/usr/src/app
+    working_dir: /usr/src/app
+    command: node index.js
