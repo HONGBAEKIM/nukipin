@@ -66,7 +66,7 @@ async function sendPinToLocks({ email, room, startTime, endTime }) {
       console.log("📦 Web API PIN payload:", JSON.stringify(payload, null, 2));
 
       try {
-        await axios.post(`${NUKI_API_BASE}/smartlock/auth`, payload, { headers });
+        await axios.put(`${NUKI_API_BASE}/smartlock/auth`, payload, { headers });
         console.log(`✅ PIN ${lockPin} created via Nuki Web API on lock ${lockId}`);
       } catch (apiErr) {
         console.error("❌ Error while creating PIN on Nuki Web API:", apiErr.response?.data || apiErr.message);
