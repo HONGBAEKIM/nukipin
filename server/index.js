@@ -8,10 +8,14 @@ const PORT = 3000;
 
 app.use(express.json());
 
+
+
+
+// for one booking
 app.post('/create-pin', async (req, res) => {
   const secretHeader = req.headers['x-api-secret'];
 
-  if (secretHeader !== process.env.WIX_API_SECRET) {
+  if (secretHeader !== process.env.secret) {
     return res.status(403).json({ error: 'Unauthorized: Invalid API secret' });
   }
 
@@ -33,7 +37,7 @@ app.post('/create-pin', async (req, res) => {
 app.get('/list-pins', async (req, res) => {
   const secretHeader = req.headers['x-api-secret'];
 
-  if (secretHeader !== process.env.WIX_API_SECRET) {
+  if (secretHeader !== process.env.secret) {
     return res.status(403).json({ error: 'Unauthorized: Invalid API secret' });
   }
 
@@ -45,23 +49,29 @@ app.get('/list-pins', async (req, res) => {
 
     const now = new Date();
     const allPins = [];
-    const LOCK_ID_2 = process.env.LOCK_ID_2; // ✅ Only testing umm2 for now
 
-    const response = await axios.get(`https://api.nuki.io/smartlock/${LOCK_ID_2}/auth`, { headers });
+    const LOCK_ID_1 = process.env.LOCK_ID_1;
+    const LOCK_ID_2 = process.env.LOCK_ID_2;
+    const lockIds = [LOCK_ID_1, LOCK_ID_2];
 
-    const pins = response.data.map((auth) => {
-      const until = auth.allowedUntilDate ? new Date(auth.allowedUntilDate) : null;
-      return {
-        lockId: LOCK_ID_2,
-        code: auth.code,
-        name: auth.name,
-        from: auth.allowedFromDate,
-        until: auth.allowedUntilDate,
-        expired: until ? until < now : false,
-      };
-    });
+    for (const lockId of lockIds) {
+      const response = await axios.get(`https://api.nuki.io/smartlock/${lockId}/auth`, { headers });
 
-    allPins.push(...pins);
+      const pins = response.data.map((auth) => {
+        const until = auth.allowedUntilDate ? new Date(auth.allowedUntilDate) : null;
+        return {
+          lockId: lockId,
+          code: auth.code,
+          name: auth.name,
+          from: auth.allowedFromDate,
+          until: auth.allowedUntilDate,
+          expired: until ? until < now : false,
+        };
+      });
+
+      allPins.push(...pins);
+    }
+
     res.status(200).json(allPins);
   } catch (err) {
     console.error("❌ Error listing PINs:", err.response?.data || err.message);
@@ -69,7 +79,7 @@ app.get('/list-pins', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running at http://0.0.0.0:${PORT}`);
 });
 
